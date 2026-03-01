@@ -1,4 +1,4 @@
-# COUNTRY_LOAD.py
+
 from Config import Config
 from Logger import Logger
 from Variable import Variables
@@ -18,8 +18,6 @@ sf.execute_query(f"""
     SELECT DISTINCT COUNTRY FROM {v.get('STG_SCHEMA')}.{v.get('STG_VIEW')}
 """)
 
-# SCD2 expire/insert
-# expire if name changes (unlikely here since name = business key)
 sf.execute_query(f"""
     UPDATE {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
     SET

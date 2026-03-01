@@ -13,7 +13,6 @@ sf = Config(v)
 # truncate temporary staging table
 sf.execute_query(f"TRUNCATE TABLE {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}")
 
-# copy distinct regions from the stage view
 sf.execute_query(f"""
     INSERT INTO {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')} (REGION_NAME)
     SELECT DISTINCT REGION
@@ -22,7 +21,6 @@ sf.execute_query(f"""
 """ )
 
 # merge into target dimension
-# expire/insert for region scd2
 sf.execute_query(f"""
     UPDATE {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
     SET

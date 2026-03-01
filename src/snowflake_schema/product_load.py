@@ -26,7 +26,6 @@ temp_query = f"""
 """
 sf.execute_query(temp_query)
 
-# SCD2 handling: expire changed current records then insert
 src_cte = f"""
     SELECT
         TMP.PRODUCT_ID,
@@ -55,7 +54,6 @@ expire_query = f"""
 """
 sf.execute_query(expire_query)
 
-# insert new/current records where no active row exists
 insert_query = f"""
     INSERT INTO {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} (
         PRODUCT_ID,

@@ -10,11 +10,9 @@ v.set("TMP_TABLE", "TMP_D_CITY")
 v.set("TGT_TABLE", "TGT_D_CITY")
 sf = Config(v)
 
-# Truncate temporary table
 truncate_query = f"TRUNCATE TABLE {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}"
 sf.execute_query(truncate_query)
 
-# Load to temporary table
 temp_query = f"""
     INSERT INTO {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}
     (CITY_NAME, POSTAL_CODE, STATE_NAME)
@@ -26,7 +24,6 @@ temp_query = f"""
 """
 sf.execute_query(temp_query)
 
-# Expire changed current records (SCD2)
 expire_query = f"""
     UPDATE {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
     SET
@@ -49,7 +46,6 @@ expire_query = f"""
 """
 sf.execute_query(expire_query)
 
-# Insert new/current records (new key or changed attributes)
 insert_query = f"""
     INSERT INTO {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')}
     (

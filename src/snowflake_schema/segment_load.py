@@ -24,8 +24,6 @@ temp_query = f"""
 """
 sf.execute_query(temp_query)
 
-# Merge into target — no FK to resolve, segment is a root/parent table
-# SCD2 expire/insert for segment
 sf.execute_query(f"""
     UPDATE {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
     SET

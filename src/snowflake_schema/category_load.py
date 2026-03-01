@@ -10,11 +10,9 @@ v.set("TMP_TABLE", "TMP_D_CATEGORY")
 v.set("TGT_TABLE", "TGT_D_CATEGORY")
 sf = Config(v)
 
-# Truncate temporary table
 truncate_query = f"TRUNCATE TABLE {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}"
 sf.execute_query(truncate_query)
 
-# Load to temporary table
 temp_query = f"""
     INSERT INTO {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}
     (CATEGORY_NAME)
@@ -24,8 +22,6 @@ temp_query = f"""
 """
 sf.execute_query(temp_query)
 
-# Merge into target — no FK to resolve, category is a root/parent table
-# scd2 expire/insert for category
 sf.execute_query(f"""
     UPDATE {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
     SET

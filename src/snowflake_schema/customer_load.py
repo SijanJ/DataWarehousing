@@ -14,9 +14,6 @@ sf = Config(v)
 truncate_query = f"TRUNCATE TABLE {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}"
 sf.execute_query(truncate_query)
 
-# Load to temporary table
-# NOTE: Unlike star schema, we now bring SEGMENT as a name string,
-#       not embed it directly — SEGMENT_KEY will be resolved during merge
 temp_query = f"""
     INSERT INTO {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}
     (CUSTOMER_ID, CUSTOMER_NAME, SEGMENT_NAME)
@@ -28,7 +25,6 @@ temp_query = f"""
 """
 sf.execute_query(temp_query)
 
-# Expire changed current records (SCD2)
 expire_query = f"""
     UPDATE {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
     SET
@@ -53,7 +49,6 @@ expire_query = f"""
 """
 sf.execute_query(expire_query)
 
-# Insert new/current records (new key or changed attributes)
 insert_query = f"""
     INSERT INTO {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')}
     (

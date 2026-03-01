@@ -15,8 +15,6 @@ truncate_query = f"TRUNCATE TABLE {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}"
 sf.execute_query(truncate_query)
 
 # Load to temporary table
-# TMP holds only raw natural keys and measures — NO surrogate keys
-# All surrogate key lookups (CUSTOMER_KEY, PRODUCT_KEY, etc.) happen during the merge step
 temp_query = f"""
                 INSERT INTO {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}
                 (ORDER_ID, CUSTOMER_ID, PRODUCT_ID, CITY_NAME, POSTAL_CODE, ORDER_DATE, SHIP_DATE, SHIP_MODE, QUANTITY, DISCOUNT,REVENUE, PROFIT, COST)
@@ -48,7 +46,6 @@ temp_query = f"""
 sf.execute_query(temp_query)
 
 # UPDATE AND LOAD (Merge)
-# All surrogate key lookups are resolved here by joining TMP to each dimension TARGET table
 merge_query = f"""
                 MERGE INTO {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
                 USING (

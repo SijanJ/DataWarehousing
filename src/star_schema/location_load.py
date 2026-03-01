@@ -27,51 +27,20 @@ temp_query = f"""
             """
 sf.execute_query(temp_query)
 
-# SCD2 handling for location dimension
-src_cte = f"""
-    SELECT COUNTRY, REGION, STATE, CITY, POSTAL_CODE
-    FROM {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')}
-"""
-
-expire_query = f"""
-    UPDATE {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
-    SET
-        IS_CURRENT = FALSE,
-        EFFECTIVE_TO = CURRENT_TIMESTAMP()
-    FROM (
-        {src_cte}
-    ) AS SRC
-    WHERE TGT.POSTAL_CODE = SRC.POSTAL_CODE
-      AND TGT.IS_CURRENT = TRUE
-      AND (
-            TGT.COUNTRY <> SRC.COUNTRY
-         OR TGT.REGION  <> SRC.REGION
-         OR TGT.STATE   <> SRC.STATE
-         OR TGT.CITY    <> SRC.CITY
-      );
-"""
-sf.execute_query(expire_query)
-
-insert_query = f"""
-    INSERT INTO {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} (
-        COUNTRY, REGION, STATE, CITY, POSTAL_CODE,
-        IS_CURRENT, EFFECTIVE_FROM, EFFECTIVE_TO
-    )
-    SELECT
-        SRC.COUNTRY, SRC.REGION, SRC.STATE, SRC.CITY, SRC.POSTAL_CODE,
-        TRUE, CURRENT_TIMESTAMP(), TO_TIMESTAMP_NTZ('9999-12-31 23:59:59.999')
-    FROM (
-        {src_cte}
-    ) SRC
-    LEFT JOIN {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} CUR
-        ON CUR.POSTAL_CODE = SRC.POSTAL_CODE
-       AND CUR.IS_CURRENT = TRUE
-       AND CUR.COUNTRY = SRC.COUNTRY
-       AND CUR.REGION  = SRC.REGION
-       AND CUR.STATE   = SRC.STATE
-       AND CUR.CITY    = SRC.CITY
-    WHERE CUR.POSTAL_CODE IS NULL;
-"""
-sf.execute_query(insert_query)
+# UPDATE AND LOAD(Merge)
+merge_query = f"""
+                MERGE INTO {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
+                USING {v.get('TMP_SCHEMA')}.{v.get('TMP_TABLE')} AS TMP
+                    ON TGT.POSTAL_CODE = TMP.POSTAL_CODE
+                WHEN MATCHED THEN
+                    UPDATE SET TGT.COUNTRY = TMP.COUNTRY, 
+                    TGT.REGION = TMP.REGION,
+                    TGT.STATE = TMP.STATE,
+                    TGT.CITY = TMP.CITY
+                WHEN NOT MATCHED THEN
+                    INSERT (TGT.COUNTRY, TGT.REGION, TGT.STATE, TGT.CITY, TGT.POSTAL_CODE)
+                    VALUES (TMP.COUNTRY, TMP.REGION, TMP.STATE, TMP.CITY, TMP.POSTAL_CODE);
+            """
+sf.execute_query(merge_query)
 
 v.get('LOG').close()

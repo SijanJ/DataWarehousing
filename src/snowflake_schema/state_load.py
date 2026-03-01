@@ -21,7 +21,6 @@ sf.execute_query(f"""
     WHERE STATE IS NOT NULL
 """ )
 
-# expire / insert pattern for SCD2
 sf.execute_query(f"""
     UPDATE {v.get('TGT_SCHEMA')}.{v.get('TGT_TABLE')} AS TGT
     SET
